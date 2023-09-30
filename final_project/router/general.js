@@ -26,17 +26,35 @@ public_users.post("/register", (req,res) => {
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
   //Write your code here
-  return res.status(200).send(JSON.stringify({books}, null, 4));
+  let getAvailableBooks = new Promise((resolve) => {
+      resolve(JSON.stringify({books}, null, 4));
+  })
+
+  getAvailableBooks.then((availBooks) => {
+      return res.status(200).send(availBooks);
+  }).catch(() => {
+      return res.status(500).json({message: "Unable to retrive books"});
+  })
 });
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
   //Write your code here
   const isbn = req.params.isbn;
-  if (books[isbn] == null) {
-      return res.status(404).json({ message: `Books with isbn: ${isbn} not found`})
-  }
-  return res.status(200).send(JSON.stringify(books[isbn], null, 4));
+
+  const getBookByISBN = new Promise((resolve, reject) => {
+      if (books[isbn] == null) {
+          reject(`Books with isbn: ${isbn} not found`);
+      } else {
+          resolve(JSON.stringify(books[isbn], null, 4));
+      }
+  });
+
+  getBookByISBN.then((val) => {
+      return res.status(200).send(val);
+  }).catch((err) => {
+      return res.status(400).json({ message: err});
+  })
  });
   
 // Get book details based on author
@@ -45,12 +63,21 @@ public_users.get('/author/:author',function (req, res) {
   const author = decodeURIComponent(req.params.author);
   const keys = Object.keys(books);
 
-  for (let i=0; i < keys.length; i++) {
-      if (books[i+1].author == author) {
-          return res.status(200).send(JSON.stringify(books[i+1], null, 4))
-      }
-  }
-  return res.status(400).json({message: `Book with author ${author} not found`});
+
+  const getBooksByAuthor = new Promise((resolve, reject) => {
+    for (let i=0; i < keys.length; i++) {
+        if (books[i+1].author == author) {
+            resolve(JSON.stringify(books[i+1], null, 4))
+        }
+    }
+    return reject(`Book with author ${author} not found`);
+  })
+
+  getBooksByAuthor().then((val) => {
+      return res.status(200).send(val);
+  }).catch((err) => {
+      return res.status(400).json({message: err});
+  })
 });
 
 // Get all books based on title
@@ -59,12 +86,18 @@ public_users.get('/title/:title',function (req, res) {
   const title = decodeURIComponent(req.params.title);
   const keys = Object.keys(books);
 
-  for (let i = 0; i < keys.length; i++) {
-      if (books[i+1].title == title) {
-          return res.status(200).send(JSON.stringify(books[i+1], null, 4));
-      }
-  }
-  return res.status(404).json({message: `Book with title: ${title} not found`});
+  const getBooksByTitle = new Promise((resolve) => {
+    for (let i = 0; i < keys.length; i++) {
+        if (books[i+1].title == title) {
+            resolve(JSON.stringify(books[i+1], null, 4));
+        }
+    }
+  })
+  getBooksByTitle().then((val) => {
+      return res.status(200).send(val);
+  }).catch(() => {
+      return res.status(404).json({message: `Book with title: ${title} not found`});
+  })
 });
 
 //  Get book review

@@ -43,16 +43,21 @@ regd_users.post("/login", (req,res) => {
       return res.status(404).json({message: "Username or Password invalid, please check inputs and try again"})
   }
   let accessToken = jwt.sign({
-      data: username
+      username: username, password: password
   }, "access", { expiresIn: 60 * 60});
 
   req.session.authorization = { accessToken }
+  req.session.user = username;
+  req.session.isLoggedIn = true;
   return res.status(200).json({message: `User ${username} successfully logged in`});
 });
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
+  const review = req.query.review
+  console.log(req.session)
+  console.log(review);
   return res.status(300).json({message: "Yet to be implemented"});
 });
 
